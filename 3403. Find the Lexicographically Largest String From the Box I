@@ -1,0 +1,20 @@
+class Solution:
+    def answerString(self, word: str, numFriends: int) -> str:
+        N = len(word)
+        if numFriends == 1:
+            return word
+
+        max_char = max(word)
+        max_string = ""
+
+        for pos in range(N):
+            if word[pos] == max_char:
+                l_allowed = min(N - pos, N - numFriends + 1)
+                if l_allowed <= 0:
+                    continue
+
+                s = word[pos:pos + l_allowed]
+                if s > max_string:
+                    max_string = s
+
+        return max_string
