@@ -1,0 +1,137 @@
+public int minimumSum(int[][] grid) {
+    int minAreaSum;   // final answer: minimum sum of 3 rectangle areas
+    int iMinArea = 0; // area of first rectangle
+    int jMinArea = 0; // area of second rectangle
+    int kMinArea = 0; // area of third rectangle
+
+    // Initially take the entire grid as a single rectangle
+    minAreaSum = minimumArea(0, grid.length, 0, grid[0].length, grid);
+
+    int startCol = 0;
+    int endCol = grid[0].length - 1;
+
+    /** ==========================
+     *  1. Partition by horizontal cuts (rows)
+     *  ========================== */
+    for (int iStart = 0, iEnd = 0; iEnd < grid.length; iEnd++) {
+        // First rectangle from top → iEnd row
+        iMinArea = minimumArea(iStart, iEnd, startCol, endCol, grid);
+
+        for (int jStart = iEnd + 1, jEnd = iEnd + 1; jEnd < grid.length; jEnd++) {
+            int kStart = jEnd + 1;
+            int kEnd = grid.length - 1;
+
+            // Second rectangle
+            jMinArea = minimumArea(jStart, jEnd, startCol, endCol, grid);
+            // Third rectangle
+            kMinArea = minimumArea(kStart, kEnd, startCol, endCol, grid);
+
+            // Update minimum sum of areas
+            minAreaSum = Math.min(minAreaSum, iMinArea + jMinArea + kMinArea);
+        }
+    }
+
+    /** ==========================
+     *  2. Partition by vertical cuts (columns)
+     *  ========================== */
+    int startRow = 0;
+    int endRow = grid.length - 1;
+
+    for (int iStart = 0, iEnd = 0; iEnd < grid[0].length; iEnd++) {
+        // First rectangle from col 0 → iEnd col
+        iMinArea = minimumArea(startRow, endRow, iStart, iEnd, grid);
+
+        for (int jStart = iEnd + 1, jEnd = iEnd + 1; jEnd < grid[0].length; jEnd++) {
+            int kStart = jEnd + 1;
+            int kEnd = grid[0].length - 1;
+
+            // Second rectangle
+            jMinArea = minimumArea(startRow, endRow, jStart, jEnd, grid);
+            // Third rectangle
+            kMinArea = minimumArea(startRow, endRow, kStart, kEnd, grid);
+
+            // Update minimum sum of areas
+            minAreaSum = Math.min(minAreaSum, iMinArea + jMinArea + kMinArea);
+        }
+    }
+
+    /** ==========================
+     *  3. "L-shaped" partitions (two horizontal + one vertical)
+     *  ========================== */
+    for (int iStart = 0, iEnd = 0; iEnd < grid.length; iEnd++) {
+        int jStart = iEnd + 1;
+        int jEnd = grid.length - 1;
+
+        // Sweep vertical split (left-right) for the two row groups
+        for (int k = 1; k < grid[0].length; k++) {
+            iMinArea = minimumArea(iStart, iEnd, 0, k - 1, grid);
+            jMinArea = minimumArea(jStart, jEnd, 0, k - 1, grid);
+            kMinArea = minimumArea(0, grid.length, k, grid[0].length, grid);
+
+            minAreaSum = Math.min(minAreaSum, iMinArea + jMinArea + kMinArea);
+        }
+
+        // Sweep vertical split (right-left)
+        for (int k = grid[0].length - 2; k >= 0; k--) {
+            iMinArea = minimumArea(iStart, iEnd, k + 1, grid[0].length, grid);
+            jMinArea = minimumArea(jStart, jEnd, k + 1, grid[0].length, grid);
+            kMinArea = minimumArea(0, grid.length, 0, k, grid);
+
+            minAreaSum = Math.min(minAreaSum, iMinArea + jMinArea + kMinArea);
+        }
+    }
+
+    /** ==========================
+     *  4. "L-shaped" partitions (two vertical + one horizontal)
+     *  ========================== */
+    for (int iStart = 0, iEnd = 0; iEnd < grid[0].length; iEnd++) {
+        int jStart = iEnd + 1;
+        int jEnd = grid[0].length - 1;
+
+        // Sweep horizontal split (top-down)
+        for (int k = 1; k < grid.length; k++) {
+            iMinArea = minimumArea(0, k - 1, iStart, iEnd, grid);
+            jMinArea = minimumArea(0, k - 1, jStart, jEnd, grid);
+            kMinArea = minimumArea(k, grid.length - 1, 0, grid[0].length - 1, grid);
+
+            minAreaSum = Math.min(minAreaSum, iMinArea + jMinArea + kMinArea);
+        }
+
+        // Sweep horizontal split (bottom-up)
+        for (int k = grid.length - 2; k >= 0; k--) {
+            iMinArea = minimumArea(k + 1, grid.length - 1, iStart, iEnd, grid);
+            jMinArea = minimumArea(k + 1, grid.length - 1, jStart, jEnd, grid);
+            kMinArea = minimumArea(0, k, 0, grid[0].length - 1, grid);
+
+            minAreaSum = Math.min(minAreaSum, iMinArea + jMinArea + kMinArea);
+        }
+    }
+
+    return minAreaSum;
+}
+
+/**
+ * Helper function to compute minimum bounding rectangle area
+ * for all '1's inside (startRow..endRow, startCol..endCol)
+ */
+public int minimumArea(int startRow, int endRow, int startCol, int endCol, int[][] grid) {
+    int minRow = Integer.MAX_VALUE;
+    int maxRow = Integer.MIN_VALUE;
+    int minCol = Integer.MAX_VALUE;
+    int maxCol = Integer.MIN_VALUE;
+
+    // Find bounding box of all 1's inside submatrix
+    for (int row = startRow; row <= endRow && row < grid.length; row++) {
+        for (int col = startCol; col <= endCol && col < grid[0].length; col++) {
+            if (grid[row][col] == 1) {
+                minRow = Math.min(minRow, row);
+                minCol = Math.min(minCol, col);
+                maxRow = Math.max(maxRow, row);
+                maxCol = Math.max(maxCol, col);
+            }
+        }
+    }
+
+    // If no '1' found → area = 0
+    return maxRow == Integer.MIN_VALUE ? 0 : (maxRow - minRow + 1) * (maxCol - minCol + 1);
+}
